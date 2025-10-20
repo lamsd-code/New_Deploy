@@ -109,6 +109,11 @@ public class HomeController {
         return new ModelAndView("login");
     }
 
+    @GetMapping("/register")
+    public ModelAndView register() {
+        return new ModelAndView("register");
+    }
+
     // 🚫 Truy cập bị từ chối
     @RequestMapping(value = "/access-denied", method = RequestMethod.GET)
     public ModelAndView accessDenied() {

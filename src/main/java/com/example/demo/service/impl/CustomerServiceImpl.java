@@ -6,22 +6,22 @@ import com.example.demo.entity.User;
 import com.example.demo.model.dto.AssignmentDTO;
 import com.example.demo.model.dto.CustomerDTO;
 import com.example.demo.model.request.CustomerCreateRequest;
+import com.example.demo.model.request.CustomerRegistrationRequest;
 import com.example.demo.model.response.ResponseDTO;
 import com.example.demo.model.response.StaffResponseDTO;
 import com.example.demo.repository.CustomerRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.CustomerService;
-import com.example.demo.utils.CustomerUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class CustomerServiceImpl implements CustomerService {
@@ -32,7 +32,71 @@ public class CustomerServiceImpl implements CustomerService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private CustomerUtils customerUtils;
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    public void validateRegistrationAvailability(String username, String email, String phone) {
+        String normalizedUsername = StringUtils.trimToNull(username);
+        if (normalizedUsername != null) {
+            if (customerRepository.existsByUsername(normalizedUsername) || userRepository.findOneByUserName(normalizedUsername) != null) {
+                throw new IllegalArgumentException("Tên đăng nhập đã tồn tại");
+            }
+        }
+        String normalizedEmail = StringUtils.trimToNull(email);
+        if (normalizedEmail != null) {
+            if (customerRepository.existsByEmail(normalizedEmail)) {
+                throw new IllegalArgumentException("Email đã tồn tại");
+            }
+        }
+        String normalizedPhone = StringUtils.trimToNull(phone);
+        if (normalizedPhone != null) {
+            if (customerRepository.existsByPhone(normalizedPhone)) {
+                throw new IllegalArgumentException("Số điện thoại đã tồn tại");
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public CustomerDTO registerNewCustomer(CustomerRegistrationRequest request) {
+        if (StringUtils.isBlank(request.getOtp())) {
+            throw new IllegalArgumentException("Vui lòng nhập mã OTP");
+        }
+        if (StringUtils.isBlank(request.getPassword()) || StringUtils.isBlank(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu không được để trống");
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new IllegalArgumentException("Mật khẩu xác nhận không khớp");
+        }
+        if (StringUtils.isBlank(request.getFullname())) {
+            throw new IllegalArgumentException("Họ và tên không được để trống");
+        }
+        if (StringUtils.isBlank(request.getUsername())) {
+            throw new IllegalArgumentException("Tên đăng nhập không được để trống");
+        }
+
+        validateRegistrationAvailability(request.getUsername(), request.getEmail(), request.getPhone());
+
+        Customer entity = new Customer();
+        entity.setFullname(request.getFullname().trim());
+        entity.setPhone(StringUtils.trimToNull(request.getPhone()));
+        entity.setEmail(StringUtils.trimToNull(request.getEmail()));
+        entity.setUsername(request.getUsername().trim());
+        entity.setPassword(passwordEncoder.encode(request.getPassword()));
+        entity.setStatus("Khách hàng mới");
+        entity.setIsActive(1);
+        entity.setDemand("");
+        entity.setCompanyname("Khách hàng cá nhân");
+        entity.setCreatedBy("self-register");
+
+        Customer saved = customerRepository.save(entity);
+        return customerConverter.toCustomerDTO(saved);
+    }
+
+    @Override
+    public Optional<Customer> findByUsername(String username) {
+        return customerRepository.findByUsername(username);
+    }
     @Override
     public List<CustomerDTO> findAll(Map<String, Object> conditions) {
         List<Customer> customerEntityList = customerRepository.findAll(conditions);
@@ -61,12 +125,33 @@ public class CustomerServiceImpl implements CustomerService {
             if (customerCreateRequest.getId() != null) {
                 Customer existing = customerRepository.findById(customerCreateRequest.getId())
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy khách hàng"));
-                customerUtils.setCustomerField(customerConverter.toCustomerEntity(customerCreateRequest), existing);
+                Customer converted = customerConverter.toCustomerEntity(customerCreateRequest);
+                existing.setFullname(StringUtils.trimToEmpty(converted.getFullname()));
+                existing.setPhone(StringUtils.trimToNull(converted.getPhone()));
+                existing.setEmail(StringUtils.trimToNull(converted.getEmail()));
+                existing.setCompanyname(converted.getCompanyname());
+                existing.setDemand(converted.getDemand());
+                existing.setStatus(converted.getStatus());
+                if (StringUtils.isNotBlank(customerCreateRequest.getUsername())) {
+                    existing.setUsername(converted.getUsername().trim());
+                }
+                if (StringUtils.isNotBlank(customerCreateRequest.getPassword())) {
+                    existing.setPassword(passwordEncoder.encode(customerCreateRequest.getPassword()));
+                }
                 customerEntity = existing;
             } else {
                 // Nếu là khách hàng mới
                 customerEntity = customerConverter.toCustomerEntity(customerCreateRequest);
                 customerEntity.setCreatedBy("web-form");
+                customerEntity.setFullname(StringUtils.trimToEmpty(customerEntity.getFullname()));
+                customerEntity.setPhone(StringUtils.trimToNull(customerEntity.getPhone()));
+                customerEntity.setEmail(StringUtils.trimToNull(customerEntity.getEmail()));
+                if (StringUtils.isNotBlank(customerEntity.getUsername())) {
+                    customerEntity.setUsername(customerEntity.getUsername().trim());
+                }
+                if (StringUtils.isNotBlank(customerEntity.getPassword())) {
+                    customerEntity.setPassword(passwordEncoder.encode(customerEntity.getPassword()));
+                }
             }
 
             System.out.println("👉 Nhận từ form: " + customerCreateRequest.getFullname() + " - " + customerCreateRequest.getEmail());

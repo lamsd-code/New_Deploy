@@ -3,7 +3,9 @@ package com.example.demo.service;
 
 import com.example.demo.model.dto.AssignmentDTO;
 import com.example.demo.model.dto.CustomerDTO;
+import com.example.demo.entity.Customer;
 import com.example.demo.model.request.CustomerCreateRequest;
+import com.example.demo.model.request.CustomerRegistrationRequest;
 import com.example.demo.model.response.ResponseDTO;
 import org.springframework.data.domain.Page;
 
@@ -11,6 +13,7 @@ import java.util.Map;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface CustomerService {
     List<CustomerDTO> findAll(Map<String, Object> conditions);
@@ -20,4 +23,7 @@ public interface CustomerService {
     ResponseDTO findStaffsByCustomerId(Long id);
     ResponseDTO updateAssignmentTable(AssignmentDTO assignmentDTO);
     //Page<CustomerDTO> findAll(Map<String, Object> conditions, int page, int size);
+    void validateRegistrationAvailability(String username, String email, String phone);
+    CustomerDTO registerNewCustomer(CustomerRegistrationRequest request);
+    Optional<Customer> findByUsername(String username);
 }
