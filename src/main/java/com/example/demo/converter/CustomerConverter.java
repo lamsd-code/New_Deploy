@@ -4,6 +4,7 @@ package com.example.demo.converter;
 import com.example.demo.entity.Customer;
 import com.example.demo.model.dto.CustomerDTO;
 import com.example.demo.model.request.CustomerCreateRequest;
+import org.apache.commons.lang.StringUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -22,6 +23,12 @@ public class CustomerConverter {
         customerEntity.setFullname(customerCreateRequest.getFullname());
         customerEntity.setPhone(customerCreateRequest.getPhone());
         customerEntity.setEmail(customerCreateRequest.getEmail());
+        if (StringUtils.isNotBlank(customerCreateRequest.getUsername())) {
+            customerEntity.setUsername(customerCreateRequest.getUsername());
+        }
+        if (StringUtils.isNotBlank(customerCreateRequest.getPassword())) {
+            customerEntity.setPassword(customerCreateRequest.getPassword());
+        }
         //customerEntity.setCompanyname(customerCreateRequest.getCompanyname());
         customerEntity.setDemand(customerCreateRequest.getDemand());
         // ⚙️ Nếu khách không nhập companyname hoặc status → gán mặc định
@@ -43,6 +50,7 @@ public class CustomerConverter {
     }
     public CustomerCreateRequest toCustomerCreateRequest(Customer customerEntity){
         CustomerCreateRequest customerCreateRequest = modelMapper.map(customerEntity, CustomerCreateRequest.class);
+        customerCreateRequest.setPassword(null);
         return customerCreateRequest;
     }
 }

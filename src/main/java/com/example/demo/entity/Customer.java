@@ -22,6 +22,12 @@ public class Customer extends Base{
     @Column(name = "email")
     private String email;
 
+    @Column(name = "username", unique = true)
+    private String username;
+
+    @Column(name = "password")
+    private String password;
+
     @Column(name = "companyname")
     private String companyname;
 
