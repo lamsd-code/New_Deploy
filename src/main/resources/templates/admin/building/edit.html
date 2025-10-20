@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title layout:fragment="pageTitle">Thêm / Cập nhật Tòa nhà | SkyLand</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
+    <style>
+        .custom-alert-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+        }
+        .custom-alert {
+            position: fixed;
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white; padding: 25px 35px;
+            border-radius: 8px; text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: none;
+        }
+        .custom-alert-button {
+            margin-top: 15px;
+            background: #007bff; color: white;
+            border: none; padding: 8px 20px;
+            border-radius: 5px; cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <h2 class="fw-bold mb-4" th:text="${buildingEdit.id != null ? 'Cập nhật tòa nhà' : 'Thêm tòa nhà'}"></h2>
+
+    <!-- ✅ FORM -->
+    <form id="buildingForm" th:object="${buildingEdit}" enctype="multipart/form-data" class="card card-body shadow-sm">
+        <input type="hidden" th:field="*{id}" name="id"/>
+
+        <!-- ẢNH ĐẠI DIỆN -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Ảnh đại diện</label>
+            <input type="file" id="avatarFile" name="avatarFile" class="form-control" accept="image/*">
+            <div th:if="${buildingEdit.avatar != null}">
+                <img th:src="@{${buildingEdit.avatar}}" alt="Avatar" class="img-thumbnail mt-2" style="max-height:200px;">
+            </div>
+        </div>
+
+        <!-- THÔNG TIN -->
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label fw-bold">Tên tòa nhà</label><input th:field="*{name}" class="form-control" required></div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Quận</label>
+                <select th:field="*{district}" class="form-select" required>
+                    <option value="">---Chọn Quận---</option>
+                    <option th:each="d : ${districts}" th:value="${d.key}" th:text="${d.value}"></option>
+                </select>
+            </div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phường</label><input th:field="*{ward}" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Đường</label><input th:field="*{street}" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Kết cấu</label><input th:field="*{structure}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Số tầng hầm</label><input th:field="*{numberOfBasement}" type="number" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Diện tích sàn (m²)</label><input th:field="*{floorArea}" type="number" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Hướng</label><input th:field="*{direction}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Hạng</label><input th:field="*{level}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Diện tích thuê</label><input th:field="*{rentArea}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Giá thuê</label><input th:field="*{rentPrice}" type="number" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Mô tả giá</label><input th:field="*{rentPriceDescription}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phí dịch vụ</label><input th:field="*{serviceFee}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phí ô tô</label><input th:field="*{carFee}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phí mô tô</label><input th:field="*{motoFee}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phí ngoài giờ</label><input th:field="*{overtimeFee}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Tiền điện</label><input th:field="*{electricityFee}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Đặt cọc</label><input th:field="*{deposit}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Thanh toán</label><input th:field="*{payment}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Thời hạn thuê</label><input th:field="*{rentTime}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Thời gian trang trí</label><input th:field="*{decorationtime}" class="form-control"></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Tên quản lý</label><input th:field="*{managerName}" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-bold">SĐT quản lý</label><input th:field="*{managerPhone}" class="form-control" required></div>
+            <div class="col-md-6"><label class="form-label fw-bold">Phí môi giới</label><input th:field="*{brokerageFee}" class="form-control"></div>
+        </div>
+
+        <!-- LOẠI TÒA NHÀ -->
+        <div class="mt-3">
+            <label class="form-label fw-bold">Loại tòa nhà</label>
+            <div th:each="type : ${typeCodes}" class="form-check form-check-inline">
+                <input type="checkbox" name="typeCode"
+                       class="form-check-input"
+                       th:value="${type.key}"
+                       th:checked="${buildingEdit.typeCode != null and #lists.contains(buildingEdit.typeCode, type.key)}">
+                <label th:text="${type.value}" class="form-check-label"></label>
+            </div>
+        </div>
+
+        <!-- GHI CHÚ -->
+        <div class="mt-3">
+            <label class="form-label fw-bold">Ghi chú</label>
+            <textarea th:field="*{note}" class="form-control" rows="2"></textarea>
+        </div>
+
+        <!-- NÚT -->
+        <div class="mt-4 d-flex justify-content-between">
+            <button type="button" id="btnSaveBuilding" class="btn btn-success px-4">
+                <i class="fa-solid fa-check me-2"></i>Lưu
+            </button>
+            <a th:href="@{/admin/building-list}" class="btn btn-secondary px-4">
+                <i class="fa-solid fa-rotate-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </form>
+
+    <!-- ALERT -->
+    <div id="customAlertBackdrop" class="custom-alert-backdrop"></div>
+    <div id="customAlert" class="custom-alert">
+        <span id="customAlertMessage"></span>
+        <button id="customAlertButton" class="custom-alert-button">OK</button>
+    </div>
+</main>
+<!-- Nếu staff cố truy cập trực tiếp, hiển thị cảnh báo -->
+<section sec:authorize="hasAuthority('STAFF')" class="container text-center py-5">
+    <h4 class="text-danger">⚠️ Bạn không có quyền truy cập trang này.</h4>
+    <a href="/admin/building-list" class="btn btn-primary mt-3">Quay lại danh sách tòa nhà</a>
+</section>
+
+<th:block layout:fragment="scripts">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:inline="javascript">
+        $(function () {
+            $('#btnSaveBuilding').click(function () {
+                const formData = new FormData($('#buildingForm')[0]);
+                const id = formData.get('id');
+                const url = id ? `/api/building/${id}` : '/api/building';
+                const method = id ? 'PUT' : 'POST';
+
+                $.ajax({
+                    type: method,
+                    url: url,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function () {
+                        customAlert('✅ ' + (id ? 'Cập nhật' : 'Thêm mới') + ' thành công!', function () {
+                            window.location.href = '/admin/building-list';
+                        });
+                    },
+                    error: function (xhr) {
+                        customAlert('❌ Lỗi khi lưu (' + xhr.status + ')');
+                    }
+                });
+            });
+
+            function customAlert(message, callback) {
+                $('#customAlertMessage').text(message);
+                $('#customAlertBackdrop, #customAlert').show();
+                $('#customAlertButton').off('click').on('click', function () {
+                    $('#customAlertBackdrop, #customAlert').hide();
+                    if (callback) callback();
+                });
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

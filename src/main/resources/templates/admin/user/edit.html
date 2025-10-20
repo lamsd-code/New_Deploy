@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title layout:fragment="pageTitle">Thêm / Cập nhật người dùng | SkyLand</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <h2 class="fw-bold mb-4"
+        th:text="${model.id != null ? 'Cập nhật người dùng' : 'Thêm mới người dùng'}"></h2>
+
+    <!-- Cảnh báo nếu là STAFF -->
+    <th:block th:if="${#authorization.expression('hasAuthority(''STAFF'')')}">
+        <div class="alert alert-warning">
+            ⚠️ Bạn chỉ có quyền xem thông tin người dùng. Không thể chỉnh sửa hoặc thay đổi mật khẩu.
+        </div>
+    </th:block>
+
+    <!-- FORM -->
+    <form id="formEdit" th:object="${model}" class="card card-body shadow-sm">
+        <input type="hidden" th:field="*{id}" id="userId"/>
+
+        <div class="row g-3">
+
+            <!-- Vai trò -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Vai trò</label>
+                <select th:field="*{roleCode}" class="form-select"
+                        th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+                    <option value="">-- Chọn vai trò --</option>
+                    <option th:each="entry : ${model.roleDTOs.entrySet()}"
+                            th:value="${entry.key}"
+                            th:text="${entry.value}"></option>
+                </select>
+            </div>
+
+            <!-- Tên đăng nhập -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên đăng nhập</label>
+                <input th:field="*{userName}"
+                       th:attr="disabled=${model.id != null || #authorization.expression('hasAuthority(''STAFF'')')}"
+                       class="form-control"
+                       placeholder="Nhập tên đăng nhập" required>
+            </div>
+
+            <!-- Mật khẩu (chỉ khi thêm mới) -->
+            <div class="col-md-6" th:if="${model.id == null}">
+                <label class="form-label fw-bold">Mật khẩu</label>
+                <input type="password" th:field="*{password}" class="form-control"
+                       placeholder="Nhập mật khẩu mặc định" required
+                       th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+            </div>
+
+            <!-- Họ tên đầy đủ -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Họ tên đầy đủ</label>
+                <input th:field="*{fullName}" class="form-control" placeholder="Nhập họ tên đầy đủ"
+                       th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+            </div>
+
+            <!-- Số điện thoại -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Số điện thoại</label>
+                <input th:field="*{phone}" class="form-control" placeholder="Nhập số điện thoại"
+                       th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Email</label>
+                <input th:field="*{email}" type="email" class="form-control" placeholder="Nhập email"
+                       th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+            </div>
+
+            <!-- Trạng thái -->
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Trạng thái</label>
+                <select th:field="*{status}" class="form-select"
+                        th:attr="disabled=${#authorization.expression('hasAuthority(''STAFF'')')}">
+                    <option value="">-- Chọn trạng thái --</option>
+                    <option value="1">Hoạt động</option>
+                    <option value="0">Ngừng hoạt động</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Nút hành động -->
+        <div class="mt-4 d-flex flex-wrap gap-2">
+
+            <!-- STAFF chỉ có nút quay lại -->
+            <th:block th:if="${#authorization.expression('hasAuthority(''STAFF'')')}">
+                <a th:href="@{/admin/user-list}" class="btn btn-secondary px-4">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </th:block>
+
+            <!-- MANAGER & ADMIN có thể thêm/sửa/reset -->
+            <th:block th:if="${#authorization.expression('hasAnyAuthority(''MANAGER'',''ADMIN'')')}">
+                <button type="button" id="btnAddOrUpdateUsers" class="btn btn-success px-4">
+                    <i class="fa-solid fa-check me-2"></i>
+                    <span th:text="${model.id != null ? 'Cập nhật người dùng' : 'Thêm mới người dùng'}"></span>
+                </button>
+
+                <button type="button" id="btnResetPassword" class="btn btn-warning px-4"
+                        th:if="${model.id != null}">
+                    <i class="fa-solid fa-rotate-left me-2"></i>Reset mật khẩu
+                </button>
+
+                <a th:href="@{/admin/user-list}" class="btn btn-secondary px-4">
+                    <i class="fa-solid fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </th:block>
+        </div>
+
+        <div class="text-center mt-3">
+            <img th:src="@{/img/loading.gif}" style="display: none; height: 60px;" id="loading_image">
+        </div>
+    </form>
+
+    <!-- ALERT -->
+    <div id="customAlertBackdrop" class="custom-alert-backdrop"></div>
+    <div id="customAlert" class="custom-alert">
+        <span id="customAlertMessage"></span>
+        <button id="customAlertButton" class="custom-alert-button">OK</button>
+    </div>
+</main>
+
+<!-- Scripts -->
+<th:block layout:fragment="scripts">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+    $(function () {
+        const formUrl = /*[[@{/api/user}]]*/ "/api/user";
+
+        $('#btnAddOrUpdateUsers').click(function (event) {
+            event.preventDefault();
+            const data = {};
+            $('#formEdit').serializeArray().forEach(v => data[v.name] = v.value.trim());
+
+            const userId = $('#userId').val();
+            const roleCode = data['roleCode'];
+            const userName = data['userName'];
+
+            if (userId) {
+                if (roleCode) {
+                    updateUser(data, userId);
+                } else {
+                    customAlert("⚠️ Vui lòng chọn vai trò!");
+                }
+            } else {
+                if (userName && roleCode) {
+                    $('#loading_image').show();
+                    addUser(data);
+                } else {
+                    customAlert("⚠️ Vui lòng nhập tên đăng nhập và chọn vai trò!");
+                }
+            }
+        });
+
+        $('#btnResetPassword').click(function (event) {
+            event.preventDefault();
+            $('#loading_image').show();
+            resetPassword($('#userId').val());
+        });
+
+        function addUser(data) {
+            $.ajax({
+                url: formUrl,
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    $('#loading_image').hide();
+                    customAlert("✅ Thêm người dùng thành công!", () => {
+                        window.location.href = `/admin/user-edit-${res.id}?message=insert_success`;
+                    });
+                },
+                error: function () {
+                    customAlert("❌ Lỗi khi thêm người dùng!");
+                }
+            });
+        }
+
+        function updateUser(data, id) {
+            $.ajax({
+                url: `${formUrl}/${id}`,
+                type: 'PUT',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    customAlert("✅ Cập nhật người dùng thành công!", () => {
+                        window.location.href = `/admin/user-edit-${res.id}?message=update_success`;
+                    });
+                },
+                error: function () {
+                    customAlert("❌ Lỗi khi cập nhật người dùng!");
+                }
+            });
+        }
+
+        function resetPassword(id) {
+            $.ajax({
+                url: `${formUrl}/password/${id}/reset`,
+                type: 'PUT',
+                dataType: 'json',
+                success: function (res) {
+                    $('#loading_image').hide();
+                    customAlert("✅ Đặt lại mật khẩu thành công!", () => {
+                        window.location.href = `/admin/user-edit-${res.id}?message=reset_password_success`;
+                    });
+                },
+                error: function () {
+                    customAlert("❌ Lỗi khi reset mật khẩu!");
+                }
+            });
+        }
+
+        function customAlert(msg, cb) {
+            $('#customAlertMessage').text(msg);
+            $('#customAlertBackdrop, #customAlert').fadeIn(200);
+            $('#customAlertButton').off('click').on('click', function () {
+                $('#customAlertBackdrop, #customAlert').fadeOut(200);
+                if (cb) cb();
+            });
+        }
+    });
+</script>
+</th:block>
+</body>
+</html>

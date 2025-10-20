@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:fragment="pageTitle">Tin tức | SkyLand</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="page-wrapper">
+
+    <!-- INTRO -->
+    <section class="intro text-center text-white" style="
+        background-image: url('https://bizweb.dktcdn.net/100/328/362/themes/894751/assets/bg_breadcrumb.png?1664350964800');
+        background-size: cover;
+        background-position: center top;
+        padding: 60px 0;">
+        <h1 class="fw-bold display-5">Tin tức</h1>
+        <ul class="list-inline mt-3 mb-0">
+            <li class="list-inline-item">
+                <a th:href="@{/trang-chu}" class="text-white text-decoration-none">Trang chủ</a>
+                <span class="mx-1">/</span>
+            </li>
+            <li class="list-inline-item"><span class="text-light">Tin tức</span></li>
+        </ul>
+    </section>
+
+    <!-- CONTENT -->
+    <section class="content-tintuc my-5">
+        <div class="container">
+            <div class="row">
+                <!-- CỘT DANH MỤC -->
+                <aside class="col-md-4 mb-4">
+                    <h4 class="fw-bold border-bottom pb-2 mb-3">Danh mục tin tức</h4>
+                    <div class="list-group small">
+                        <a th:href="@{/trang-chu}" class="list-group-item list-group-item-action">Trang chủ</a>
+                        <a th:href="@{/gioi-thieu}" class="list-group-item list-group-item-action">Giới thiệu</a>
+                        <a th:href="@{/san-pham}" class="list-group-item list-group-item-action">Dự án bất động sản</a>
+                        <a th:href="@{/tin-tuc}" class="list-group-item list-group-item-action active">Tin tức</a>
+                        <a th:href="@{/lien-he}" class="list-group-item list-group-item-action">Liên hệ</a>
+                    </div>
+
+                    <h4 class="fw-bold border-bottom pb-2 mt-4 mb-3">Tin xem nhiều</h4>
+                    <div th:if="${popularPosts != null}" th:each="post : ${popularPosts}"
+                         class="d-flex align-items-start mb-3">
+                        <img th:src="${post.imageUrl}" alt="Ảnh bài viết"
+                             class="me-2 rounded" style="width:80px; height:60px; object-fit:cover;">
+                        <a th:href="@{'/tin-tuc/' + ${post.id}}"
+                           th:text="${post.title}"
+                           class="small text-dark text-decoration-none"></a>
+                    </div>
+                    <p th:if="${#lists.isEmpty(popularPosts)}" class="text-muted small fst-italic">Chưa có tin nổi bật.</p>
+                </aside>
+
+                <!-- CỘT DANH SÁCH BÀI VIẾT -->
+                <div class="col-md-8">
+                    <div th:if="${newsList != null}" th:each="news : ${newsList}" class="mb-4 pb-3 border-bottom">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <a th:href="@{'/tin-tuc/' + ${news.id}}">
+                                    <img th:src="${news.imageUrl}"
+                                         alt="Ảnh bài viết"
+                                         class="img-fluid rounded"
+                                         style="height:220px; object-fit:cover;">
+                                </a>
+                            </div>
+                            <div class="col-md-7">
+                                <h5 class="fw-bold mb-1">
+                                    <a th:href="@{'/tin-tuc/' + ${news.id}}"
+                                       th:text="${news.title}"
+                                       class="text-decoration-none text-dark"></a>
+                                </h5>
+                                <div class="text-muted small mb-2">
+                                    <i class="fa fa-calendar text-success me-1"></i>
+                                    <span th:text="${#temporals.format(news.date, 'dd/MM/yyyy')}">01/01/2025</span>
+                                    &nbsp;|&nbsp;
+                                    <i class="fa fa-comments text-success me-1"></i>
+                                    <span th:text="${news.commentCount}">0</span> bình luận
+                                </div>
+                                <p class="small text-secondary mb-2" th:text="${news.shortDescription}">
+                                    Mô tả ngắn của bài viết...
+                                </p>
+                                <a class="btn btn-outline-success btn-sm"
+                                   th:href="@{'/tin-tuc/' + ${news.id}}">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Nếu chưa có tin tức -->
+                    <div th:if="${#lists.isEmpty(newsList)}" class="text-center text-muted mt-5">
+                        <i class="fa-solid fa-newspaper fa-2x mb-3"></i>
+                        <p>Chưa có tin tức nào được đăng.</p>
+                    </div>
+
+                    <!-- PHÂN TRANG -->
+                    <nav th:if="${totalPages > 1}" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item" th:classappend="${page == 1} ? 'disabled'">
+                                <a class="page-link" th:href="@{|/tin-tuc?page=${page - 1}|}">«</a>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(1, totalPages)}"
+                                th:classappend="${i == page} ? 'active'">
+                                <a class="page-link" th:href="@{|/tin-tuc?page=${i}|}" th:text="${i}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == totalPages} ? 'disabled'">
+                                <a class="page-link" th:href="@{|/tin-tuc?page=${page + 1}|}">»</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+</body>
+</html>

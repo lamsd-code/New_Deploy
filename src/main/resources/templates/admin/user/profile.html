@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title layout:fragment="pageTitle">Hồ sơ người dùng | SkyLand</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        .custom-alert-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+        }
+        .custom-alert {
+            position: fixed;
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px 35px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: none;
+            text-align: center;
+        }
+        .custom-alert-button {
+            margin-top: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <h2 class="fw-bold mb-4">Hồ sơ người dùng</h2>
+
+    <!-- Alert từ backend -->
+    <div th:if="${messageResponse != null}"
+         th:class="'alert alert-' + ${alert} + ' alert-dismissible fade show'" role="alert">
+        <span th:text="${messageResponse}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- FORM -->
+    <form id="formEdit" th:object="${model}" class="card card-body shadow-sm">
+        <input type="hidden" th:field="*{id}" id="userId"/>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên đăng nhập</label>
+                <input th:field="*{userName}" id="userName"
+                       class="form-control" disabled>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên đầy đủ</label>
+                <input th:field="*{fullName}" id="fullName"
+                       class="form-control" placeholder="Nhập tên đầy đủ">
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="button" id="btnUpdateUser" class="btn btn-warning px-4">
+                <i class="fa-solid fa-user-pen me-2"></i>Cập nhật thông tin
+            </button>
+            <a th:href="@{/admin/home}" class="btn btn-secondary px-4">
+                <i class="fa-solid fa-house me-2"></i>Trang chủ
+            </a>
+        </div>
+    </form>
+
+    <!-- ALERT JS -->
+    <div id="customAlertBackdrop" class="custom-alert-backdrop"></div>
+    <div id="customAlert" class="custom-alert">
+        <span id="customAlertMessage"></span>
+        <button id="customAlertButton" class="custom-alert-button">OK</button>
+    </div>
+</main>
+
+<th:block layout:fragment="scripts">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+    $(function () {
+        const formUrl = /*[[@{/api/user}]]*/ "/api/user";
+
+        $('#btnUpdateUser').click(function (event) {
+            event.preventDefault();
+
+            const userId = $('#userId').val();
+            const userName = $('#userName').val();
+            const data = {
+                fullName: $('#fullName').val()
+            };
+
+            if (userId) {
+                updateInfo(data, userName);
+            }
+        });
+
+        function updateInfo(data, username) {
+            $.ajax({
+                url: `${formUrl}/profile/${username}`,
+                type: 'PUT',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function (res) {
+                    customAlert("✅ Cập nhật thành công!", () => {
+                        window.location.href = `/admin/profile-${res.userName}?message=update_success`;
+                    });
+                },
+                error: function () {
+                    customAlert("❌ Lỗi khi cập nhật thông tin!", () => {
+                        window.location.href = `/admin/profile-${username}?message=error_system`;
+                    });
+                }
+            });
+        }
+
+        // Custom alert
+        function customAlert(msg, cb) {
+            $('#customAlertMessage').text(msg);
+            $('#customAlertBackdrop, #customAlert').fadeIn(200);
+            $('#customAlertButton').off('click').on('click', function () {
+                $('#customAlertBackdrop, #customAlert').fadeOut(200);
+                if (cb) cb();
+            });
+        }
+    });
+</script>
+</th:block>
+</body>
+</html>

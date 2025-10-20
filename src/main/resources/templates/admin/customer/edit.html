@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title layout:fragment="pageTitle">Thêm / Cập nhật Khách hàng | SkyLand</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        .custom-alert-backdrop {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+        }
+        .custom-alert {
+            position: fixed;
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 25px 35px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: none;
+            text-align: center;
+        }
+        .custom-alert-button {
+            margin-top: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal {
+		    display: none;
+		    position: fixed;
+		    inset: 0;
+		    background: rgba(0,0,0,0.5);
+		    z-index: 1050;
+		}
+		.modal-content {
+		    background: white;
+		    width: 500px;
+		    margin: 100px auto;
+		    padding: 20px 30px;
+		    border-radius: 10px;
+		    position: relative;
+		}
+		.modal-header {
+		    font-weight: bold;
+		    font-size: 18px;
+		    margin-bottom: 15px;
+		}
+		.modal-close {
+		    position: absolute;
+		    right: 10px;
+		    top: 8px;
+		    cursor: pointer;
+		    color: #888;
+		}
+        
+    </style>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <h2 class="fw-bold mb-4"
+        th:text="${customerCreateRequest.id != null ? 'Cập nhật khách hàng' : 'Thêm khách hàng'}"></h2>
+        
+        
+    <!-- Cảnh báo nếu là STAFF -->
+    <th:block sec:authorize="hasAuthority('STAFF')">
+        <div class="alert alert-info">
+            🧾 Bạn có thể thêm và chỉnh sửa thông tin khách hàng trong phạm vi được phân công, nhưng không thể xóa.
+        </div>
+    </th:block>
+
+    <!-- FORM -->
+    <form id="customerForm" th:object="${customerCreateRequest}" class="card card-body shadow-sm">
+
+        <input type="hidden" th:field="*{id}"/>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên khách hàng</label>
+                <input th:field="*{fullname}" class="form-control" placeholder="Nhập tên khách hàng" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Số điện thoại</label>
+                <input th:field="*{phone}" class="form-control" placeholder="VD: 0905123456" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Email</label>
+                <input th:field="*{email}" type="email" class="form-control" placeholder="VD: example@gmail.com" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tên công ty</label>
+                <input th:field="*{companyname}" class="form-control" placeholder="Tên công ty (nếu có)">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Nhu cầu</label>
+                <input th:field="*{demand}" class="form-control" placeholder="VD: Mua căn hộ, thuê nhà...">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label fw-bold">Tình trạng</label>
+                <select th:field="*{status}" class="form-select">
+                    <option value="">---Chọn tình trạng---</option>
+                    <option th:each="st : ${statuses}" th:value="${st.key}" th:text="${st.value}"></option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-between">
+            <button type="button" id="btnSaveCustomer" class="btn btn-success px-4">
+                <i class="fa-solid fa-check me-2"></i>Lưu
+            </button>
+            <!-- Nút Xóa chỉ cho MANAGER -->
+            <button type="button" id="btnDeleteCustomer" class="btn btn-danger px-4"
+                    sec:authorize="hasAuthority('MANAGER')">
+                <i class="fa-solid fa-trash me-2"></i>Xóa
+            </button>
+            <a th:href="@{/admin/customer-list}" class="btn btn-secondary px-4">
+                <i class="fa-solid fa-rotate-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </form>
+    <!-- DANH SÁCH GIAO DỊCH -->
+	<div class="mt-5">
+	    <h4 class="text-primary mb-3">🧩 Chăm Sóc Khách Hàng
+	    	 <button class="btn btn-sm btn-outline-primary ms-2"
+                    th:onclick="'openTransactionModal(' + ${customerCreateRequest.id} + ', \'CSKH\')'">
+                ➕ Thêm CSKH
+            </button>
+	    </h4>
+	    <table class="table table-bordered">
+	        <thead class="table-light">
+	        <tr>
+	            <th>Ngày tạo</th>
+	            <th>Người tạo</th>
+	            <th>Ngày sửa</th>
+	            <th>Người sửa</th>
+	            <th>Chi tiết giao dịch</th>
+	            <th>Thao tác</th>
+	        </tr>
+	        </thead>
+	        <tbody>
+	        <tr th:each="t : ${CSKH}">
+	            <td th:text="${#dates.format(t.createdDate, 'dd/MM/yyyy')}"></td>
+	            <td th:text="${t.createdBy}"></td>
+	            <td th:text="${#dates.format(t.modifiedDate, 'dd/MM/yyyy')}"></td>
+	            <td th:text="${t.modifiedBy}"></td>
+	            <td th:text="${t.note}"></td>
+	            <td class="text-center"> <!-- ✅ thêm cột thao tác -->
+			        <button class="btn btn-sm btn-outline-secondary me-1"
+			                th:onclick="'editTransaction(' + ${t.id} + ')'">
+			            <i class="fa-solid fa-pen-to-square"></i>
+			        </button>
+			        <button class="btn btn-sm btn-outline-danger"
+			                th:onclick="'deleteTransaction(' + ${t.id} + ')'">
+			            <i class="fa-solid fa-trash"></i>
+			        </button>
+			    </td>
+	        </tr>
+	        <tr th:if="${#lists.isEmpty(CSKH)}">
+	            <td colspan="5" class="text-center text-muted fst-italic">Chưa có giao dịch CSKH</td>
+	        </tr>
+	        </tbody>
+	    </table>
+	
+	    <h4 class="text-primary mb-3 mt-4">🚗 Dẫn Đi Xem
+	    	<button class="btn btn-sm btn-outline-primary ms-2"
+                    th:onclick="'openTransactionModal(' + ${customerCreateRequest.id} + ', \'DDX\')'">
+                ➕ Thêm DDX
+            </button>
+	    </h4>
+	    <table class="table table-bordered">
+	        <thead class="table-light">
+	        <tr>
+	            <th>Ngày tạo</th>
+	            <th>Người tạo</th>
+	            <th>Ngày sửa</th>
+	            <th>Người sửa</th>
+	            <th>Chi tiết giao dịch</th>
+	            <th>Thao tác</th>
+	        </tr>
+	        </thead>
+	        <tbody>
+	        <tr th:each="t : ${DDX}">
+	            <td th:text="${#dates.format(t.createdDate, 'dd/MM/yyyy')}"></td>
+	            <td th:text="${t.createdBy}"></td>
+	            <td th:text="${#dates.format(t.modifiedDate, 'dd/MM/yyyy')}"></td>
+	            <td th:text="${t.modifiedBy}"></td>
+	            <td th:text="${t.note}"></td>
+	            <td class="text-center"> <!-- ✅ thêm cột thao tác -->
+			        <button class="btn btn-sm btn-outline-secondary me-1"
+			                th:onclick="'editTransaction(' + ${t.id} + ')'">
+			            <i class="fa-solid fa-pen-to-square"></i>
+			        </button>
+			        <button class="btn btn-sm btn-outline-danger"
+			                th:onclick="'deleteTransaction(' + ${t.id} + ')'">
+			            <i class="fa-solid fa-trash"></i>
+			        </button>
+			    </td>
+	        </tr>
+	        <tr th:if="${#lists.isEmpty(DDX)}">
+	            <td colspan="5" class="text-center text-muted fst-italic">Chưa có giao dịch DDX</td>
+	        </tr>
+	        </tbody>
+	    </table>
+	</div>
+    <!-- MODAL THÊM GIAO DỊCH -->
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeTransactionModal()">&times;</span>
+            <div class="modal-header">Thêm giao dịch</div>
+            <form id="transactionForm">
+            	<input type="hidden" id="transactionId">
+                <input type="hidden" id="transactionCustomerId">
+                <input type="hidden" id="transactionCode">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Chi tiết giao dịch</label>
+                    <textarea id="transactionNote" class="form-control" rows="3"
+                              placeholder="Nhập nội dung giao dịch..."></textarea>
+                </div>
+                <button type="button" id="btnSaveTransaction" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-paper-plane me-2"></i>Lưu giao dịch
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ALERT -->
+    <div id="customAlertBackdrop" class="custom-alert-backdrop"></div>
+    <div id="customAlert" class="custom-alert">
+        <span id="customAlertMessage"></span>
+        <button id="customAlertButton" class="custom-alert-button">OK</button>
+    </div>
+</main>
+
+<th:block layout:fragment="scripts">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+
+// ======================
+// 🔔 Custom Alert
+// ======================
+function customAlert(msg, cb) {
+    $('#customAlertMessage').text(msg);
+    $('#customAlertBackdrop, #customAlert').fadeIn(200);
+    $('#customAlertButton').off('click').on('click', function () {
+        $('#customAlertBackdrop, #customAlert').fadeOut(200);
+        if (cb) cb();
+    });
+}
+
+// ======================
+// 🧾 Transaction Modal
+// ======================
+function openTransactionModal(customerId, code) {
+    $('#transactionId').val('');
+    $('#transactionCustomerId').val(customerId);
+    $('#transactionCode').val(code);
+    $('#transactionNote').val('');
+    $('.modal-header').text('Thêm giao dịch');
+    $('#transactionModal').fadeIn(200);
+}
+function editTransaction(id) {
+    $.get('/api/transaction/' + id, function (res) {
+        $('#transactionId').val(id);
+        $('#transactionNote').val(res.data);
+        $('.modal-header').text('Chỉnh sửa giao dịch');
+        $('#transactionModal').fadeIn(200);
+    }).fail(() => customAlert('❌ Không thể tải giao dịch!'));
+}
+
+function closeTransactionModal() {
+    $('#transactionModal').fadeOut(200);
+}
+
+//---------- Delete ----------
+function deleteTransaction(id) {
+    if (!confirm('Bạn có chắc muốn xóa giao dịch này?')) return;
+    $.ajax({
+        type: 'DELETE',
+        url: '/api/transaction/' + id,
+        success: function () {
+            customAlert('🗑️ Đã xóa giao dịch thành công!', () => location.reload());
+        },
+        error: function () {
+            customAlert('❌ Xóa thất bại!');
+        }
+    });
+}
+// ======================
+// ⚙️ Document Ready
+// ======================
+$(function () {
+
+    // ---------- SAVE CUSTOMER ----------
+    $('#btnSaveCustomer').click(function () {
+        const formData = {};
+        $('#customerForm').serializeArray().forEach(v => formData[v.name] = v.value.trim());
+
+        if (!formData.fullname || !formData.phone || !formData.email) {
+            customAlert("⚠️ Vui lòng điền đầy đủ thông tin!");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "/api/customer",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (res) {
+                const msg = res.message || (formData.id ? "✅ Cập nhật thành công!" : "✅ Thêm khách hàng thành công!");
+                customAlert(msg, function () {
+                    window.location.href = "/admin/customer-list";
+                });
+            },
+            error: function (xhr) {
+                console.error(xhr);
+                customAlert("❌ Lưu thất bại! Vui lòng kiểm tra dữ liệu hoặc thử lại sau.");
+            }
+        });
+    });
+
+    // ---------- SAVE TRANSACTION ----------
+    $('#btnSaveTransaction').click(function () {
+        const data = {
+        	id: $('#transactionId').val(),
+            customerId: $('#transactionCustomerId').val(),
+            code: $('#transactionCode').val(),
+            note: $('#transactionNote').val().trim()
+        };
+
+        if (!data.note) {
+            customAlert("⚠️ Vui lòng nhập nội dung giao dịch!");
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/transaction',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (res) {
+                customAlert(res.message || '✅ Lưu giao dịch thành công!', () => location.reload());
+            },
+            error: function () {
+                customAlert('❌ Lưu giao dịch thất bại!');
+            }
+        });
+    });
+
+});
+</script>
+</th:block>
+
+</body>
+</html>

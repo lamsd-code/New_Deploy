@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title layout:fragment="pageTitle">Danh sách người dùng | SkyLand</title>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <h2 class="fw-bold mb-4">Danh sách người dùng</h2>
+
+    <!-- Thông báo -->
+    <div th:if="${messageResponse != null}" 
+         th:class="'alert alert-' + ${alert} + ' alert-dismissible fade show'" role="alert">
+        <span th:text="${messageResponse}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- FORM TÌM KIẾM -->
+    <form th:action="@{/admin/user-list}" th:object="${model}" method="get" class="card card-body shadow-sm mb-4">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-8">
+                <label class="form-label fw-bold">Giá trị cần tìm</label>
+                <input th:field="*{searchValue}" class="form-control" placeholder="Nhập tên, email hoặc role...">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Tìm kiếm
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- NÚT THÊM / XÓA -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+	    <!-- MANAGER & ADMIN được thêm -->
+	    <th:block th:if="${#authorization.expression('hasAnyAuthority(''MANAGER'',''ADMIN'')')}">
+	        <a th:href="@{/admin/user-edit}" class="btn btn-primary">
+	            <i class="fa fa-plus-circle me-2"></i>Thêm người dùng
+	        </a>
+	        <button id="btnDelete" class="btn btn-danger" disabled>
+	            <i class="fa fa-trash me-2"></i>Xóa người dùng
+	        </button>
+	    </th:block>
+	
+	    <!-- STAFF chỉ xem -->
+	    <th:block th:if="${#authorization.expression('hasAuthority(''STAFF'')')}">
+	        <span class="text-muted fst-italic">Bạn chỉ có quyền xem danh sách người dùng</span>
+	    </th:block>
+	</div>
+
+
+    <!-- BẢNG DANH SÁCH -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-striped align-middle">
+            <thead class="table-light">
+            <tr>
+                <th class="text-center"><input type="checkbox" id="checkAll"></th>
+                <th>Tên đăng nhập</th>
+                <th>Họ và tên</th>
+                <th>Vai trò</th>
+                <th class="text-center">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="user : ${model.listResult}">
+                <td class="text-center">
+                    <input type="checkbox" name="checkList" th:value="${user.id}" class="check-item form-check-input">
+                </td>
+                <td th:text="${user.userName}">user01</td>
+                <td th:text="${user.fullName}">Nguyễn Văn A</td>
+                <td th:text="${user.roleCode}">STAFF</td>
+                <td class="text-center">
+				    <!-- STAFF: không thấy nút sửa -->
+				    <th:block th:if="${#authorization.expression('hasAuthority(''STAFF'')')}">
+				        <span class="text-muted">Không được thao tác</span>
+				    </th:block>
+				
+				    <!-- MANAGER hoặc ADMIN: được sửa -->
+				    <th:block th:if="${#authorization.expression('hasAnyAuthority(''MANAGER'',''ADMIN'')')}">
+				        <div th:if="${user.roleCode != 'MANAGER'}">
+				            <a th:href="@{'/admin/user-edit-' + ${user.id}}" class="btn btn-sm btn-primary">
+				                <i class="fa fa-pencil-alt"></i> Sửa
+				            </a>
+				        </div>
+				        <div th:if="${user.roleCode == 'MANAGER'}">
+				            <span class="text-muted">Không được thao tác</span>
+				        </div>
+				    </th:block>
+				</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(model.listResult)}">
+                <td colspan="5" class="text-center text-muted">Không có người dùng nào</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</main>
+
+<th:block layout:fragment="scripts">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:inline="javascript">
+    $(function () {
+        // Chọn tất cả checkbox
+        $('#checkAll').on('change', function () {
+            $('.check-item').prop('checked', this.checked);
+            toggleDeleteButton();
+        });
+
+        // Nếu 1 checkbox thay đổi => kiểm tra nút xóa
+        $(document).on('change', '.check-item', toggleDeleteButton);
+
+        function toggleDeleteButton() {
+            const anyChecked = $('.check-item:checked').length > 0;
+            $('#btnDelete').prop('disabled', !anyChecked);
+        }
+
+        // Xử lý xóa người dùng
+        $('#btnDelete').click(function () {
+            if (!confirm('Bạn có chắc chắn muốn xóa người dùng đã chọn?')) return;
+
+            const ids = $('.check-item:checked').map(function () {
+                return $(this).val();
+            }).get();
+
+            $.ajax({
+                url: /*[[@{/api/user}]]*/ "/api/user",
+                type: "DELETE",
+                data: JSON.stringify(ids),
+                contentType: "application/json",
+                success: function () {
+                    alert("✅ Xóa thành công!");
+                    window.location.href = /*[[@{/admin/user-list}]]*/ "/admin/user-list";
+                },
+                error: function (err) {
+                    console.error(err);
+                    alert("❌ Lỗi hệ thống khi xóa!");
+                }
+            });
+        });
+    });
+</script>
+</th:block>
+</body>
+</html>

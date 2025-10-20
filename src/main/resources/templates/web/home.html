@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:fragment="pageTitle">Trang chủ | SkyLand</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="page-wrapper">
+
+    <!-- SLIDESHOW -->
+    <section id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active"></button>
+            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1"></button>
+            <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2"></button>
+        </div>
+
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img th:src="@{https://bizweb.dktcdn.net/100/328/362/themes/894751/assets/slider_1.png?1676257083798}"
+                     class="d-block w-100" alt="Slide 1">
+            </div>
+            <div class="carousel-item">
+                <img th:src="@{https://media.tapchitaichinh.vn/images/upload/hoangthuviet/04202019/bat-dong-san.jpg}"
+                     class="d-block w-100" alt="Slide 2">
+            </div>
+            <div class="carousel-item">
+                <img th:src="@{https://richnguyen.vn/wp-content/uploads/2020/08/buc-anh-bat-dong-san-dep-2.jpg}"
+                     class="d-block w-100" alt="Slide 3">
+            </div>
+        </div>
+    </section>
+
+    <!-- FORM TÌM KIẾM -->
+    <section class="search bg-light py-4 border-top border-bottom">
+        <div class="container">
+            <form class="row g-3 align-items-end" th:action="@{/san-pham}" method="get">
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Tỉnh/Thành phố</label>
+                    <select class="form-select" name="city">
+                        <option value="">-- Chọn tỉnh/thành phố --</option>
+                        <option>TP. Hà Nội</option>
+                        <option>TP. Hồ Chí Minh</option>
+                        <option>TP. Đà Nẵng</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Quận/Huyện</label>
+                    <select class="form-select" name="district">
+                        <option value="">-- Chọn quận/huyện --</option>
+                        <option th:each="d : ${districts}" th:value="${d.key}" th:text="${d.value}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Loại bất động sản</label>
+                    <select class="form-select" name="type">
+                        <option value="">-- Chọn loại BĐS --</option>
+                        <option>Căn hộ</option>
+                        <option>Nhà đất</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <button class="btn btn-success w-100">
+                        <i class="fa-solid fa-magnifying-glass me-1"></i> Tìm kiếm nhanh
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- DỰ ÁN NỔI BẬT -->
+    <section class="content py-5">
+	    <div class="text-center mb-4">
+	        <h2 class="fw-bold text-success">Dự án BĐS nổi bật</h2>
+	        <p class="text-muted">
+	            Tổng hợp các BĐS tại Hà Nội, Đà Nẵng, TP Hồ Chí Minh,... và các tỉnh thành phố khác hot hiện tại
+	        </p>
+	    </div>
+	
+	    <div class="container">
+	        <!-- Nếu có dữ liệu từ controller -->
+	        <div class="row g-4" th:if="${highlightProjects != null and !#lists.isEmpty(highlightProjects)}">
+	            <div class="col-md-4" th:each="p : ${highlightProjects}">
+	                <div class="card border-0 shadow-sm h-100">
+	                    <div class="card-img-top rounded-top"
+	                         th:style="'background-image:url(' + ${p.imageUrl} + '); background-size:cover; height:220px;'">
+	                    </div>
+	                    <div class="card-body">
+	                        <h5 class="card-title fw-bold mb-2" th:text="${p.title}">Căn hộ Sky Park Residence</h5>
+	                        <p class="text-muted small" th:text="${p.description}">
+	                            Mô tả ngắn của dự án...
+	                        </p>
+	                        <ul class="list-unstyled small text-muted">
+	                            <li><i class="fa-solid fa-location-dot text-success me-1"></i>
+	                                <span th:text="${p.address}">Số 03 Tôn Thất Thuyết</span>
+	                            </li>
+	                            <li><i class="fa-solid fa-building text-success me-1"></i>
+	                                <span th:text="'Loại: ' + ${p.type}">Chung cư</span>
+	                            </li>
+	                            <li><i class="fa-solid fa-ruler-combined text-success me-1"></i>
+	                                <span th:text="'Diện tích: ' + ${p.area}">78 - 146 m²</span>
+	                            </li>
+	                        </ul>
+	                    </div>
+	                    <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+	                        <span class="fw-bold text-success" th:text="${p.price}">2,5 Tỷ</span>
+	                        <a class="btn btn-outline-primary btn-sm" th:href="@{'/chi-tiet/' + ${p.id}}">Chi tiết</a>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	
+	        <!-- Nếu KHÔNG có dữ liệu (hiển thị DEMO mặc định) -->
+	        <div class="row g-4" th:if="${highlightProjects == null or #lists.isEmpty(highlightProjects)}">
+	            <div class="col-md-4">
+	                <div class="product1 vip">
+	                    <img th:src="@{/images/demo-1.jpg}" alt="Căn hộ Sky Park Residence" class="img-fluid rounded mb-3">
+	                    <div class="product1-conntent">
+	                        <div class="product1-conntent-header">
+	                            <a href="#">Căn hộ chung cư tại Sky Park Residence</a>
+	                        </div>
+	                        <span class="product1-conntent-title">
+	                            Dự án Sky Park Residence số 3 Tôn Thất Thuyết đang trong quá trình hoàn thiện
+	                        </span>
+	                        <ul class="product1-conntent-list">
+	                            <li><i class="fa-solid fa-location-dot"></i> <span>Số 03 Tôn Thất Thuyết</span></li>
+	                            <li><i class="fa-solid fa-building"></i> <span>Loại BĐS: Chung cư</span></li>
+	                            <li><i class="fa-solid fa-earth-asia"></i> <span>Diện tích: 78m2 - 146m2</span></li>
+	                        </ul>
+	                    </div>
+	                    <div class="product1-footer">
+	                        <span class="product1-footer-cost">2,5 Tỷ</span>
+	                        <button class="product1-footer-detail">
+	                            <a href="#" style="color:#fff">Xem chi tiết</a>
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
+	
+	            <div class="col-md-4">
+	                <div class="product1 hot">
+	                    <img th:src="@{/images/demo-2.jpg}" alt="Căn hộ cao cấp Vinhomes Metropolis" class="img-fluid rounded mb-3">
+	                    <div class="product1-conntent">
+	                        <div class="product1-conntent-header">
+	                            <a href="#">Căn hộ cao cấp Vinhomes Metropolis</a>
+	                        </div>
+	                        <span class="product1-conntent-title">
+	                            Vinhomes Metropolis nằm tại trung tâm Ba Đình, mang phong cách sống sang trọng hiện đại.
+	                        </span>
+	                        <ul class="product1-conntent-list">
+	                            <li><i class="fa-solid fa-location-dot"></i> <span>Liễu Giai, Ba Đình</span></li>
+	                            <li><i class="fa-solid fa-building"></i> <span>Loại BĐS: Căn hộ cao cấp</span></li>
+	                            <li><i class="fa-solid fa-earth-asia"></i> <span>Diện tích: 60m2 - 120m2</span></li>
+	                        </ul>
+	                    </div>
+	                    <div class="product1-footer">
+	                        <span class="product1-footer-cost">4,8 Tỷ</span>
+	                        <button class="product1-footer-detail">
+	                            <a href="#" style="color:#fff">Xem chi tiết</a>
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
+	
+	            <div class="col-md-4">
+	                <div class="product1 vip">
+	                    <img th:src="@{/images/demo-3.jpg}" alt="Biệt thự biển Sun Grand City" class="img-fluid rounded mb-3">
+	                    <div class="product1-conntent">
+	                        <div class="product1-conntent-header">
+	                            <a href="#">Biệt thự biển Sun Grand City</a>
+	                        </div>
+	                        <span class="product1-conntent-title">
+	                            Biệt thự nghỉ dưỡng cao cấp ven biển Hạ Long, với view hướng biển tuyệt đẹp và tiện ích 5 sao.
+	                        </span>
+	                        <ul class="product1-conntent-list">
+	                            <li><i class="fa-solid fa-location-dot"></i> <span>Hạ Long, Quảng Ninh</span></li>
+	                            <li><i class="fa-solid fa-building"></i> <span>Loại BĐS: Biệt thự</span></li>
+	                            <li><i class="fa-solid fa-earth-asia"></i> <span>Diện tích: 200m2 - 400m2</span></li>
+	                        </ul>
+	                    </div>
+	                    <div class="product1-footer">
+	                        <span class="product1-footer-cost">12 Tỷ</span>
+	                        <button class="product1-footer-detail">
+	                            <a href="#" style="color:#fff">Xem chi tiết</a>
+	                        </button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</section>
+    
+
+    <!-- VÌ SAO CHỌN SKYLAND -->
+    <section class="py-5 bg-light border-top border-bottom">
+        <div class="container text-center">
+            <h2 class="fw-bold mb-3">Vì sao chọn SkyLand?</h2>
+            <p class="text-muted mb-5">Chúng tôi cung cấp thông tin và tư vấn BĐS nhanh chóng, chính xác và uy tín nhất.</p>
+
+            <div class="row g-4 justify-content-center" th:each="reason : ${reasons}">
+                <div class="col-md-4">
+                    <img th:src="${reason.icon}" alt="Icon" class="mb-3" style="width:64px;">
+                    <h5 th:text="${reason.title}" class="fw-bold"></h5>
+                    <p th:text="${reason.description}" class="text-muted"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ĐĂNG KÝ NHẬN TIN -->
+    <section class="py-5 text-center">
+        <div class="container">
+            <h2 class="fw-bold text-success">Nhận thông tin nhà đất miễn phí</h2>
+            <p class="text-muted mb-4">Cập nhật hơn 1.000.000 thông tin giao dịch mỗi tháng tại 63 tỉnh thành.</p>
+            <form class="d-flex justify-content-center gap-2 flex-wrap">
+                <input type="email" class="form-control w-50" placeholder="Nhập email của bạn..." required>
+                <button type="submit" class="btn btn-success">Đăng ký</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- THƯƠNG HIỆU -->
+    <section class="brand border-top py-4 bg-light">
+        <div class="container text-center">
+            <div class="d-flex justify-content-evenly flex-wrap gap-3">
+                <img th:each="b : ${brands}" th:src="${b}" alt="brand" style="height:40px;">
+            </div>
+        </div>
+    </section>
+
+</main>
+</body>
+</html>

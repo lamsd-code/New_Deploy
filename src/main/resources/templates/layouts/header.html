@@ -1,0 +1,63 @@
+<div th:fragment="header"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+    <header class="bg-light shadow-sm mb-4">
+        <nav class="navbar navbar-expand-lg navbar-light container">
+            <a class="navbar-brand fw-bold text-success" th:href="@{/trang-chu}">
+                <i class="fa-solid fa-building"></i> SkyLand
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <!-- Menu chung -->
+                    <li class="nav-item"><a class="nav-link" th:href="@{/trang-chu}">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/gioi-thieu}">Giới thiệu</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/san-pham}">Dự án</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/tin-tuc}">Tin tức</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/lien-he}">Liên hệ</a></li>
+
+                    <!-- ✅ Nếu CHƯA đăng nhập -->
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link text-success fw-semibold" th:href="@{/login}">Đăng nhập</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="!isAuthenticated()">
+                        <a class="nav-link" th:href="@{/register}">Đăng ký</a>
+                    </li>
+
+                    <!-- ✅ Nếu ĐÃ đăng nhập -->
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle fw-bold text-success" href="#" id="navbarUser"
+                           role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-user me-1"></i>
+                            👋 Xin chào, <span sec:authentication="name">User</span>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUser">
+                            <!-- Thông tin cá nhân -->
+                            <li><a class="dropdown-item" th:href="@{/admin/profile}">Hồ sơ cá nhân</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/profile-password}">Đổi mật khẩu</a></li>
+
+                            <!-- Quản trị: chỉ Manager/Admin -->
+                            <li sec:authorize="hasAnyAuthority('MANAGER','ADMIN')">
+                                <hr class="dropdown-divider">
+                                <a class="dropdown-item text-danger fw-bold" th:href="@{/admin/home}">
+                                    <i class="fa-solid fa-gear me-1"></i> Khu vực quản trị
+                                </a>
+                            </li>
+
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" th:href="@{/logout}">
+                                <i class="fa-solid fa-right-from-bracket me-1"></i> Đăng xuất
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+</div>

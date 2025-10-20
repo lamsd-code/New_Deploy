@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout.html}">
+
+<head>
+    <title>Thanh toán thất bại</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="py-5 bg-light text-center">
+    <div class="container">
+        <div class="alert alert-danger shadow-sm p-5 rounded-4">
+            <h2 class="mb-3 fw-bold">❌ Thanh toán thất bại!</h2>
+            <p class="fs-5">Rất tiếc, giao dịch của bạn chưa hoàn tất.</p>
+            <p class="text-muted">Vui lòng thử lại hoặc liên hệ với đội ngũ <strong>SkyLand Real Estate</strong> để được hỗ trợ.</p>
+            <a th:href="@{/}" class="btn btn-outline-secondary mt-3 px-4">Quay lại trang chủ</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:fragment="pageTitle">Danh sách tòa nhà | SkyLand</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="page-wrapper">
+
+    <!-- 🏙️ INTRO -->
+    <section class="intro text-center text-white"
+             style="background-image: url('https://bizweb.dktcdn.net/100/328/362/themes/894751/assets/bg_breadcrumb.png?1664350964800');
+                    background-size: cover; background-position: center; padding: 60px 0;">
+        <h1 class="fw-bold display-5">Danh sách tòa nhà</h1>
+        <ul class="list-inline mt-3 mb-0">
+            <li class="list-inline-item">
+                <a th:href="@{/trang-chu}" class="text-white text-decoration-none">Trang chủ</a>
+                <span class="mx-1">/</span>
+            </li>
+            <li class="list-inline-item"><span class="text-light">Tất cả tòa nhà</span></li>
+        </ul>
+    </section>
+
+    <!-- 🔍 FORM TÌM KIẾM -->
+    <section class="search py-5 bg-light border-bottom">
+        <div class="container">
+            <form th:action="@{/san-pham}" method="get" th:object="${search}" class="row g-3">
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Tên tòa nhà</label>
+                    <input type="text" th:field="*{name}" class="form-control" placeholder="Ví dụ: Sky Tower">
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Đường</label>
+                    <input type="text" th:field="*{street}" class="form-control" placeholder="Đường...">
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Phường</label>
+                    <input type="text" th:field="*{ward}" class="form-control" placeholder="Phường...">
+                </div>
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Quận</label>
+                    <select th:field="*{district}" class="form-select">
+                        <option value="">-- Chọn quận --</option>
+                        <option th:each="d : ${districts}" th:value="${d.key}" th:text="${d.value}"></option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Hướng</label>
+                    <input type="text" th:field="*{direction}" class="form-control" placeholder="Ví dụ: Đông Nam">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Số tầng hầm</label>
+                    <input type="number" th:field="*{numberOfBasement}" class="form-control" min="0">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Diện tích sàn (m²)</label>
+                    <input type="number" th:field="*{floorArea}" class="form-control" placeholder="Ví dụ: 200">
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold mb-1">Giá thuê (từ - đến)</label>
+                    <div class="input-group">
+                        <input type="number" th:field="*{rentPriceFrom}" class="form-control" placeholder="Từ">
+                        <input type="number" th:field="*{rentPriceTo}" class="form-control" placeholder="Đến">
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="fw-bold mb-1">Loại tòa nhà</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div th:each="type : ${typeCodes}" class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" th:field="*{typeCode}"
+                                   th:value="${type.key}" id="type__${type.key}">
+                            <label class="form-check-label" th:for="'type__' + ${type.key}" th:text="${type.value}"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-12 text-end mt-3">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i>Tìm kiếm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- 📋 DANH SÁCH TÒA NHÀ -->
+    <section class="product py-5">
+        <div class="container">
+            <div class="row g-4" th:if="${!#lists.isEmpty(projects)}">
+                <div class="col-md-4" th:each="b : ${projects}">
+                    <div class="card border-0 shadow-sm h-100">
+                    	<!-- 🖼️ HIỂN THỊ ẢNH -->
+	                    <div class="card-img-top d-flex align-items-center justify-content-center bg-light" style="height: 200px;">
+						    <img th:if="${b.imageUrl != null}"
+						         th:src="${b.imageUrl}"
+						         alt="Ảnh tòa nhà"
+						         style="width:100%; height:100%; object-fit:contain; object-position:center;">
+						</div>
+
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold" th:text="${b.name}">Sky Tower</h5>
+                            <p class="text-muted mb-2">
+							    <i class="fa-solid fa-location-dot text-success me-1"></i>
+							    <a th:href="@{https://www.google.com/maps/search/?api=1&query={q}(q=${b.address})}"
+							       class="text-decoration-none"
+							       target="_blank" rel="noopener"
+							       th:text="${b.address}">123 Nguyễn Huệ</a>
+							</p>
+
+							<!-- Nút mở Google Maps -->
+							<a th:href="@{https://www.google.com/maps/search/?api=1&query={q}(q=${b.address})}"
+							   class="btn btn-outline-success btn-sm mb-3"
+							   target="_blank" rel="noopener">
+							   <i class="fa-solid fa-map-location-dot me-1"></i> Xem trên Google Maps
+							</a>
+
+                            <ul class="list-unstyled small mb-3">
+                                <li>📐 Diện tích sàn: <span th:text="${b.floorArea} + ' m²'">200 m²</span></li>
+                                <li>🏢 Số tầng hầm: <span th:text="${b.numberOfBasement}">2</span></li>
+                                <li>📞 Quản lý: <span th:text="${b.managerName}">Nguyễn Văn A</span> (<span th:text="${b.managerPhone}">0909123456</span>)</li>
+                                <li>💰 Giá thuê: <span th:text="${b.rentPrice}">25</span> triệu</li>
+                                <li>🧾 Phí dịch vụ: <span th:text="${b.serviceFee}">Miễn phí</span></li>
+                            </ul>
+                            <div class="d-grid mt-3">
+                                <button type="button"
+                                        class="btn btn-success fw-bold"
+                                        th:attr="data-id=${b.id}, data-name=${b.name}, data-price=${b.rentPrice}"
+                                        onclick="payDeposit(this)">
+                                    💰 Đặt cọc ngay
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 🕳️ Không có dữ liệu -->
+            <div th:if="${#lists.isEmpty(projects)}" class="text-center mt-5 text-muted">
+                <i class="fa-solid fa-box-open fa-2x mb-3"></i>
+                <p>Hiện chưa có tòa nhà nào được đăng.</p>
+            </div>
+        </div>
+    </section>
+
+</main>
+<!-- ✅ SCRIPT THANH TOÁN VNPAY -->
+<script>
+async function payDeposit(btn) {
+    const buildingId = btn.getAttribute("data-id");
+    const buildingName = btn.getAttribute("data-name");
+    const rentPrice = btn.getAttribute("data-price");
+
+    // 💡 Cọc = 10% giá thuê
+    const depositAmount = rentPrice * 0.1 * 1_000_000; // triệu → VND
+
+    // 🧾 Dữ liệu gửi tới API
+    const payload = {
+        amount: depositAmount,
+        buildingId: buildingId,
+        customerId: 1, // ⚠️ Tạm thời hard-code, sau có thể lấy từ session
+        type: "DATCOC",
+        note: `Đặt cọc tòa nhà ${buildingName}`
+    };
+
+    try {
+        const res = await fetch('/api/payment/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.message === 'success') {
+            window.location.href = result.data; // 🔁 Chuyển sang sandbox VNPAY
+        } else {
+            alert("❌ Không thể tạo thanh toán: " + result.message);
+        }
+    } catch (err) {
+        console.error(err);
+        alert("⚠️ Lỗi kết nối máy chủ thanh toán.");
+    }
+}
+</script>
+</body>
+</html>

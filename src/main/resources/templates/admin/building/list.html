@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title layout:fragment="pageTitle">Danh sách tòa nhà | SkyLand</title>
+
+    <!-- ✅ Font Awesome bản ổn định -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          integrity="sha512-pYdK1vCD7WfsPge2uP2GngQ6ZYoRC+O4uHeVkFJj5Yz5fAg97yJlHSlOkYamHQtbfsOgRWeQDBkW8aOGwUuFg=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <!-- 🏢 Tiêu đề + nút thêm -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Danh sách tòa nhà</h2>
+        <!-- ✅ Thông báo dành riêng cho STAFF -->
+		<div sec:authorize="hasAuthority('STAFF')" class="alert alert-info mt-2">
+		    <i class="fa-solid fa-building-user me-2"></i>
+		    Danh sách tòa nhà bạn được giao
+		</div>
+        
+        <!-- ✅ Chỉ MANAGER và ADMIN được thêm -->
+        <a th:href="@{/admin/building-edit}"
+           class="btn btn-primary"
+           sec:authorize="hasAnyAuthority('MANAGER','ADMIN')">
+            <i class="fa-solid fa-plus me-2"></i>Thêm tòa nhà
+        </a>
+    </div>
+
+    <!-- 🔍 Form tìm kiếm -->
+    <form th:action="@{/admin/building-list}" method="get"
+          class="card card-body mb-4 shadow-sm" th:object="${modelSearch}">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Tên tòa nhà</label>
+                <input th:field="*{name}" class="form-control" placeholder="VD: Sky Tower"/>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Phường</label>
+                <input th:field="*{ward}" class="form-control" placeholder="Phường..."/>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Đường</label>
+                <input th:field="*{street}" class="form-control" placeholder="Đường..."/>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Tên quản lý</label>
+                <input th:field="*{managerName}" class="form-control" placeholder="Nguyễn Văn A"/>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-3">
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Điện thoại quản lý</label>
+                <input th:field="*{managerPhone}" class="form-control"/>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Quận</label>
+                <select th:field="*{district}" class="form-select">
+                    <option value="">---Chọn Quận---</option>
+                    <option th:each="district : ${districts}"
+                            th:value="${district.key}"
+                            th:text="${district.value}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label fw-bold">Loại tòa nhà</label>
+                <div th:each="type : ${typeCodes}" class="form-check">
+                    <input type="checkbox" th:field="*{typeCode}" th:value="${type.key}" class="form-check-input"/>
+                    <label th:text="${type.value}" class="form-check-label"></label>
+                </div>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="fa-solid fa-magnifying-glass me-2"></i>Tìm kiếm
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- 📋 Bảng danh sách -->
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle shadow-sm">
+            <thead class="table-success text-center">
+            <tr>
+                <th>#</th>
+                <th>Tên tòa nhà</th>
+                <th>Địa chỉ</th>
+                <th>Quản lý</th>
+                <th>Điện thoại</th>
+                <th>Giá thuê</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="b, iterStat : ${buildingList}">
+                <td th:text="${iterStat.count}">1</td>
+                <td th:text="${b.name}">Sky Tower</td>
+                <td th:text="${b.address}">123 Nguyễn Huệ</td>
+                <td th:text="${b.managerName}">Nguyễn Văn A</td>
+                <td th:text="${b.managerPhone}">0909123456</td>
+                <td th:text="${b.rentPrice}">25 triệu</td>
+                <td class="text-center">
+                    <!-- ✏️ Sửa -->
+                    <a th:href="@{'/admin/building-edit-' + ${b.id}}"
+                       class="btn btn-sm btn-warning text-white me-1"
+                       sec:authorize="hasAnyAuthority('MANAGER','ADMIN')">
+                        <i class="fa-solid fa-pen me-1"></i>Sửa
+                    </a>
+
+                    <!-- 👥 Giao nhân viên -->
+                    <button type="button"
+                            class="btn btn-sm btn-info text-white me-1"
+                            th:attr="data-id=${b.id}"
+                            onclick="assignBuilding(this)"
+                            sec:authorize="hasAnyAuthority('MANAGER','ADMIN')">
+                        <i class="fa-solid fa-user-check me-1"></i>Giao
+                    </button>
+
+                    <!-- 🗑️ Xóa -->
+                    <button type="button"
+                            class="btn btn-sm btn-danger"
+                            th:attr="data-id=${b.id}"
+                            onclick="confirmDelete(this)"
+                            sec:authorize="hasAnyAuthority('MANAGER','ADMIN')">
+                        <i class="fa-solid fa-trash me-1"></i>Xóa
+                    </button>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(buildingList)}">
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fa-solid fa-box-open me-2"></i>Không có tòa nhà nào
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- Modal giao nhân viên -->
+	<div class="modal fade" id="assignModal" tabindex="-1">
+	  <div class="modal-dialog modal-dialog-centered modal-lg">
+	    <div class="modal-content">
+	      <div class="modal-header bg-success text-white">
+	        <h5 class="modal-title fw-bold">Giao nhân viên cho tòa nhà</h5>
+	        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	      </div>
+	      <div class="modal-body">
+	        <input type="hidden" id="assignBuildingId"/>
+	        <table class="table table-bordered align-middle text-center">
+	          <thead class="table-light">
+	            <tr>
+	              <th>Chọn</th>
+	              <th>Họ tên</th>
+	              <th>Tên đăng nhập</th>
+	            </tr>
+	          </thead>
+	          <tbody id="staffTableBody">
+	            <!-- Nhân viên sẽ được load ở đây -->
+	          </tbody>
+	        </table>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="button" id="btnSaveAssign" class="btn btn-success">
+	          <i class="fa-solid fa-check me-1"></i> Lưu phân công
+	        </button>
+	        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+    
+</main>
+
+<!-- ✅ Scripts riêng của trang này -->
+<th:block layout:fragment="scripts">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script th:inline="javascript">
+        // 🗑️ XÓA TÒA NHÀ
+        function confirmDelete(btn) {
+            const id = $(btn).data('id');
+            if (!id) {
+                alert('Không tìm thấy ID tòa nhà!');
+                return;
+            }
+
+            if (confirm('Bạn có chắc muốn xóa tòa nhà này không?')) {
+                $.ajax({
+                    url: '/api/building/' + id,
+                    type: 'DELETE',
+                    success: function (res) {
+                        console.log('✅ Xóa thành công:', res);
+                        alert('Đã xóa thành công!');
+                        window.location.reload();
+                    },
+                    error: function (xhr) {
+                        console.error('❌ Lỗi khi xóa:', xhr);
+                        alert('Xóa thất bại! (' + xhr.status + ')');
+                    }
+                });
+            }
+        }
+
+        // 👥 GIAO NHÂN VIÊN
+        function assignBuilding(btn) {
+		  const buildingId = $(btn).data('id');
+		  $('#assignBuildingId').val(buildingId);
+		
+		  $.ajax({
+		    url: `/api/building/${buildingId}/staffs`,
+		    type: "GET",
+		    success: function (res) {
+		      const staffList = res.data || [];
+		      let rows = "";
+		
+		      staffList.forEach(s => {
+		        rows += `
+		          <tr>
+		            <td><input type="checkbox" value="${s.staffId}" ${s.checked ? 'checked' : ''}></td>
+		            <td>${s.fullName ?? ''}</td>
+		            <td>${s.userName ?? s.username ?? ''}</td>
+		          </tr>`;
+		      });
+		
+		      $('#staffTableBody').html(rows);
+		      new bootstrap.Modal(document.getElementById('assignModal')).show();
+		    },
+		    error: function (xhr) {
+		      alert("❌ Lỗi khi tải danh sách nhân viên (" + xhr.status + ")");
+		      console.log(xhr.responseText);
+		    }
+		  });
+		}
+
+
+		// 🟢 Gửi phân công khi bấm “Lưu phân công”
+		$('#btnSaveAssign').click(function () {
+		  const buildingId = Number($('#assignBuildingId').val());
+		  const staffIds = $('#staffTableBody input[type=checkbox]:checked')
+		      .map(function(){ return Number($(this).val()); })
+		      .get();
+		
+		  const data = { id: buildingId, staffs: staffIds }; // <-- đúng tên fields
+		
+		  $.ajax({
+		    type: "POST",
+		    url: "/api/building/assignment",
+		    contentType: "application/json",
+		    data: JSON.stringify(data),
+		    success: function () {
+		      alert("✅ Giao nhân viên thành công!");
+		      window.location.reload();
+		    },
+		    error: function (xhr) {
+		      alert("❌ Giao thất bại (" + xhr.status + ")");
+		      console.log(xhr.responseText); // xem chi tiết lỗi backend
+		    }
+		  });
+		});
+
+
+    </script>
+</th:block>
+</body>
+</html>

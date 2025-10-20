@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title layout:fragment="pageTitle">Trang chủ quản trị | SkyLand</title>
+</head>
+
+<body>
+<main layout:fragment="content" class="container py-5">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb bg-light p-3 rounded shadow-sm">
+            <li class="breadcrumb-item">
+                <i class="fa-solid fa-house text-success me-1"></i>
+                <a th:href="@{/admin/home}" class="text-decoration-none text-success">Trang chủ</a>
+            </li>
+            <li class="breadcrumb-item active text-muted" aria-current="page">Tổng quan</li>
+        </ol>
+    </nav>
+
+    <!-- Nội dung chính -->
+    <section class="dashboard-content">
+        <div class="row g-4">
+
+            <!-- Thống kê người dùng -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <i class="fa-solid fa-users fa-2x text-primary mb-2"></i>
+                        <h5 class="fw-bold mb-0">Người dùng</h5>
+                        <p class="text-muted small">Quản lý tài khoản hệ thống</p>
+                        <a th:href="@{/admin/user-list}" class="btn btn-outline-primary btn-sm mt-2">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê khách hàng -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <i class="fa-solid fa-user-tie fa-2x text-success mb-2"></i>
+                        <h5 class="fw-bold mb-0">Khách hàng</h5>
+                        <p class="text-muted small">Danh sách khách hàng & giao dịch</p>
+                        <a th:href="@{/admin/customer-list}" class="btn btn-outline-success btn-sm mt-2">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê tòa nhà -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <i class="fa-solid fa-building fa-2x text-warning mb-2"></i>
+                        <h5 class="fw-bold mb-0">Tòa nhà</h5>
+                        <p class="text-muted small">Danh sách tòa nhà quản lý</p>
+                        <a th:href="@{/admin/building-list}" class="btn btn-outline-warning btn-sm mt-2">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thống kê cá nhân -->
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <i class="fa-solid fa-circle-user fa-2x text-danger mb-2"></i>
+                        <h5 class="fw-bold mb-0">Hồ sơ cá nhân</h5>
+                        <p class="text-muted small">Cập nhật thông tin & mật khẩu</p>
+                        <a th:href="@{/admin/profile}" class="btn btn-outline-danger btn-sm mt-2">Cập nhật</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- Biểu đồ hoặc thống kê nâng cao -->
+    <section class="mt-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h5 class="fw-bold mb-3 text-success">
+                    <i class="fa-solid fa-chart-line me-2"></i>Thống kê nhanh
+                </h5>
+                <p class="text-muted">Khu vực này bạn có thể nhúng chart (ví dụ Chart.js hoặc Recharts) nếu cần thống kê doanh thu, khách hàng, tòa nhà, v.v.</p>
+                <div style="height:200px;background-color:#f8f9fa;border-radius:10px"
+                     class="d-flex align-items-center justify-content-center text-muted">
+                    (Biểu đồ placeholder)
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
+</body>
+</html>

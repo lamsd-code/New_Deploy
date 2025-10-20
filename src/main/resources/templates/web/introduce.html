@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:fragment="pageTitle">Giới thiệu | SkyLand</title>
+
+    <style>
+        :root {
+            --primary-color: #35BF76;
+            --text-color: #434A6E;
+        }
+
+        .intro {
+            background-image: url('https://bizweb.dktcdn.net/100/328/362/themes/894751/assets/bg_breadcrumb.png?1664350964800');
+            background-size: cover;
+            background-position: center top;
+            background-repeat: no-repeat;
+            padding: 60px 0;
+            color: white;
+            text-align: center;
+        }
+
+        .intro .title-page {
+            font-weight: 700;
+            font-size: 48px;
+        }
+
+        .desc-intro {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0;
+            font-size: 16px;
+        }
+
+        .desc-intro li {
+            display: inline;
+            color: #fff;
+        }
+
+        .desc-intro a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .desc-intro a:hover {
+            color: var(--primary-color);
+        }
+
+        .page-content {
+            color: var(--text-color);
+            line-height: 1.8;
+        }
+
+        .page-content h1 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .page-content p {
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+
+<body>
+<main layout:fragment="content" class="page-wrapper">
+
+    <!-- INTRO -->
+    <section class="intro">
+        <h1 class="title-page">Giới thiệu</h1>
+        <ul class="desc-intro">
+            <li>
+                <a th:href="@{/trang-chu}">Trang chủ</a>
+                <span> / </span>
+            </li>
+            <li>Giới thiệu</li>
+        </ul>
+    </section>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <section class="page-content container py-5">
+        <h1><strong>Giới thiệu dự án The SkyLand 90</strong></h1>
+
+        <p>Tòa nhà cao nhất Việt Nam <b>The Sky Land 90</b> của Công ty cổ phần công nghệ Sapo chính thức cho khách hàng đặt giữ chỗ đợt đầu vào ngày <b>1/7/2016</b>. 
+           Sự kiện diễn ra lúc 18h tại nhà mẫu Sapohomes Central Park, số 208 Nguyễn Chí Thanh, TP. Hà Nội.</p>
+
+        <p><b>MỞ BÁN:</b></p>
+        <p>• Ngày công bố giá bán và cho khách đặt cọc: <b>19/7/2016</b></p>
+        <p>• Ngày tổ chức sự kiện mở bán: <b>25/7/2016</b></p>
+
+        <p>Tòa nhà <b>The Sky Land 90 tầng</b> sở hữu những căn hộ đẳng cấp bậc nhất Việt Nam, được nhiều nhà đầu tư trong và ngoài nước đặc biệt quan tâm.</p>
+
+        <h4 class="mt-4 fw-bold">1. Tổng quan</h4>
+        <p>– Chiều cao thiết kế: 512 m</p>
+        <p>– Số tầng: 90 tầng nổi, 4 tầng hầm</p>
+        <p>– Tổng diện tích sàn (không gồm hầm): 198.200 m²</p>
+
+        <h4 class="mt-4 fw-bold">2. Diện tích căn hộ</h4>
+        <p>– 1 phòng ngủ: 54 – 66 m²</p>
+        <p>– 2 phòng ngủ: 78 – 94 m²</p>
+        <p>– 3 phòng ngủ: 106 – 145 m²</p>
+        <p>– 4 phòng ngủ: 144 – 431 m²</p>
+
+        <h4 class="mt-4 fw-bold">3. Loại hình phát triển</h4>
+        <p>– Trung tâm thương mại, rạp chiếu phim, phòng gym (tầng B1–3)</p>
+        <p>– Khu club house: hồ bơi, spa, bar (tầng 4)</p>
+        <p>– Sảnh lounge tiêu chuẩn 5 sao (tầng 5)</p>
+        <p>– Khu căn hộ cao cấp (tầng 6–40)</p>
+        <p>– Khách sạn SapoPearl 5 sao (tầng 42–76)</p>
+        <p>– Đài quan sát (tầng 79–90)</p>
+
+        <h4 class="mt-4 fw-bold">4. Thông tin kỹ thuật</h4>
+        <p>– Số lượng căn hộ/sàn: 10–20 căn</p>
+        <p>– Thang máy: 26, thang thoát hiểm: 2, hành lang: 1.8 m</p>
+        <p><b>Đơn vị thiết kế:</b> Tập đoàn Atkins (Anh Quốc)</p>
+        <p><b>Năm khởi công:</b> 2016 &nbsp;—&nbsp; <b>Hoàn thành dự kiến:</b> 2019</p>
+    </section>
+
+</main>
+</body>
+</html>
