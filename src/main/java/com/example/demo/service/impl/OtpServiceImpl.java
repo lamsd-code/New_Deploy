@@ -1,44 +1,81 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.constant.OtpChannel;
+import com.example.demo.constant.OtpPurpose;
+import com.example.demo.entity.OtpToken;
+import com.example.demo.repository.OtpTokenRepository;
 import com.example.demo.service.OtpService;
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class OtpServiceImpl implements OtpService {
 
-    private static class OtpEntry {
-        String code;
-        Instant expiresAt;
+    private final OtpTokenRepository otpTokenRepository;
+    private final Random random = new SecureRandom();
+
+    public OtpServiceImpl(OtpTokenRepository otpTokenRepository) {
+        this.otpTokenRepository = otpTokenRepository;
     }
 
-    private final Map<String, OtpEntry> store = new ConcurrentHashMap<>();
-    private final Random rnd = new Random();
+    @Override
+    public String generateRegistrationOtp(String target, OtpChannel channel) {
+        return persistToken(target, channel, OtpPurpose.REGISTRATION, null, null);
+    }
 
     @Override
-    public String generateOtp(String key) {
-        String code = String.format("%06d", rnd.nextInt(1_000_000));
-        OtpEntry e = new OtpEntry();
-        e.code = code;
-        e.expiresAt = Instant.now().plusSeconds(5 * 60); // 5 phút
-        store.put(key, e);
+    public boolean verifyRegistrationOtp(String target, String otp) {
+        Optional<OtpToken> tokenOpt = otpTokenRepository.findTopByTargetAndPurposeOrderByCreatedAtDesc(target, OtpPurpose.REGISTRATION);
+        return verifyAndConsume(tokenOpt, otp);
+    }
+
+    @Override
+    public String generateLoginOtp(String ownerType, Long ownerId, String target, OtpChannel channel) {
+        return persistToken(target, channel, OtpPurpose.LOGIN, ownerType, ownerId);
+    }
+
+    @Override
+    public boolean verifyLoginOtp(String ownerType, Long ownerId, String otp) {
+        Optional<OtpToken> tokenOpt = otpTokenRepository.findTopByOwnerTypeAndOwnerIdAndPurposeOrderByCreatedAtDesc(ownerType, ownerId, OtpPurpose.LOGIN);
+        return verifyAndConsume(tokenOpt, otp);
+    }
+
+    private String persistToken(String target, OtpChannel channel, OtpPurpose purpose, String ownerType, Long ownerId) {
+        String code = String.format("%06d", random.nextInt(1_000_000));
+        OtpToken token = new OtpToken();
+        token.setTarget(target);
+        token.setChannel(channel);
+        token.setPurpose(purpose);
+        token.setOwnerType(ownerType);
+        token.setOwnerId(ownerId);
+        token.setCode(code);
+        token.setExpiresAt(Instant.now().plusSeconds(5 * 60));
+        token.setVerified(Boolean.FALSE);
+        otpTokenRepository.save(token);
         return code;
     }
 
-    @Override
-    public boolean verifyOtp(String key, String otp) {
-        OtpEntry e = store.get(key);
-        if (e == null) return false;
-        if (Instant.now().isAfter(e.expiresAt)) {
-            store.remove(key);
+    private boolean verifyAndConsume(Optional<OtpToken> tokenOpt, String otp) {
+        if (tokenOpt.isEmpty()) {
             return false;
         }
-        boolean ok = e.code.equals(otp);
-        if (ok) store.remove(key);
-        return ok;
+        OtpToken token = tokenOpt.get();
+        if (Boolean.TRUE.equals(token.getVerified())) {
+            return false;
+        }
+        if (Instant.now().isAfter(token.getExpiresAt())) {
+            otpTokenRepository.delete(token);
+            return false;
+        }
+        boolean matched = token.getCode().equals(otp);
+        if (matched) {
+            token.setVerified(Boolean.TRUE);
+            otpTokenRepository.save(token);
+        }
+        return matched;
     }
 }
