@@ -36,6 +36,7 @@ import java.util.Optional;
 public class AuthController {
 
 
+
     private final EmailService emailService;
     private final SmsService smsService;
     private final OtpService otpService;
@@ -98,57 +99,6 @@ public class AuthController {
         if (target == null) {
             return ResponseEntity.badRequest().body(error("Thiếu thông tin email hoặc số điện thoại"));
 
-        Customer customer = customerOpt.get();
-        if (customer.getIsActive() != null && customer.getIsActive() == 0) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error("Tài khoản đã bị khóa"));
-        }
-        if (StringUtils.isBlank(customer.getPassword()) || !passwordEncoder.matches(request.getPassword(), customer.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error("Tài khoản hoặc mật khẩu không hợp lệ"));
-        }
-
-        String target = resolveTarget(request.getChannel(), customer.getEmail(), customer.getPhone());
-        if (target == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("Khách hàng chưa cập nhật thông tin nhận OTP"));
-        }
-
-        return ResponseEntity.ok(success("OTP_SENT"));
-    }
-
-    @PostMapping("/login/verify")
-    public ResponseEntity<?> verifyLoginOtp(@RequestBody LoginOtpVerifyRequest request) {
-        if (StringUtils.isBlank(request.getUsername()) || StringUtils.isBlank(request.getOtp())) {
-            return ResponseEntity.badRequest().body(error("Thiếu thông tin xác thực"));
-        }
-
-        // Ưu tiên kiểm tra tài khoản nội bộ
-        User user = userRepository.findOneByUserName(request.getUsername());
-        if (user != null) {
-            boolean ok = otpService.verifyLoginOtp("USER", user.getId(), request.getOtp());
-            return ok ? ResponseEntity.ok(success("OTP_VERIFIED"))
-                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("OTP không hợp lệ"));
-        }
-
-        Optional<Customer> customerOpt = customerService.findByUsername(request.getUsername());
-        if (customerOpt.isPresent()) {
-            boolean ok = otpService.verifyLoginOtp("CUSTOMER", customerOpt.get().getId(), request.getOtp());
-            return ok ? ResponseEntity.ok(success("OTP_VERIFIED"))
-                    : ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("OTP không hợp lệ"));
-        }
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error("Không tìm thấy tài khoản"));
-    }
-
-    private User authenticateBackOfficeUser(LoginOtpRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-            );
-            if (authentication.isAuthenticated()) {
-                return userRepository.findOneByUserName(request.getUsername());
-            }
-        } catch (AuthenticationException ex) {
-            return null;
-        }
         return null;
     }
 
