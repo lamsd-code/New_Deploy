@@ -14,6 +14,7 @@ import com.example.demo.service.OtpService;
 import com.example.demo.service.SmsService;
 import com.example.demo.repository.UserRepository;
 import org.apache.commons.lang.StringUtils;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,6 +34,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
 
     private final EmailService emailService;
     private final SmsService smsService;
@@ -78,8 +80,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error(ex.getMessage()));
         }
 
-        String otp = otpService.generateRegistrationOtp(target, request.getChannel());
-        dispatchOtp(request.getChannel(), target, otp);
+
 
         return ResponseEntity.ok(success("OTP_SENT"));
     }
@@ -96,47 +97,6 @@ public class AuthController {
         String target = resolveTarget(request.getChannel(), request.getEmail(), request.getPhone());
         if (target == null) {
             return ResponseEntity.badRequest().body(error("Thiếu thông tin email hoặc số điện thoại"));
-        }
-
-        boolean validOtp = otpService.verifyRegistrationOtp(target, request.getOtp());
-        if (!validOtp) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("Mã OTP không chính xác hoặc đã hết hạn"));
-        }
-
-        try {
-            CustomerDTO customer = customerService.registerNewCustomer(request);
-            return ResponseEntity.ok(customer);
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error(ex.getMessage()));
-        }
-    }
-
-    @PostMapping("/login/send-otp")
-    public ResponseEntity<?> sendLoginOtp(@RequestBody LoginOtpRequest request) {
-        if (request.getChannel() == null) {
-            return ResponseEntity.badRequest().body(error("Vui lòng chọn phương thức nhận OTP"));
-        }
-        if (StringUtils.isBlank(request.getUsername()) || StringUtils.isBlank(request.getPassword())) {
-            return ResponseEntity.badRequest().body(error("Tên đăng nhập và mật khẩu là bắt buộc"));
-        }
-
-        // Thử xác thực với tài khoản nội bộ (User)
-        User user = authenticateBackOfficeUser(request);
-        if (user != null) {
-            String target = resolveTarget(request.getChannel(), user.getEmail(), user.getPhone());
-            if (target == null) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("Tài khoản chưa cập nhật thông tin nhận OTP"));
-            }
-            String code = otpService.generateLoginOtp("USER", user.getId(), target, request.getChannel());
-            dispatchOtp(request.getChannel(), target, code);
-            return ResponseEntity.ok(success("OTP_SENT"));
-        }
-
-        // Thử với khách hàng
-        Optional<Customer> customerOpt = customerService.findByUsername(request.getUsername());
-        if (customerOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error("Tài khoản hoặc mật khẩu không hợp lệ"));
-        }
 
         Customer customer = customerOpt.get();
         if (customer.getIsActive() != null && customer.getIsActive() == 0) {
@@ -150,8 +110,7 @@ public class AuthController {
         if (target == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error("Khách hàng chưa cập nhật thông tin nhận OTP"));
         }
-        String code = otpService.generateLoginOtp("CUSTOMER", customer.getId(), target, request.getChannel());
-        dispatchOtp(request.getChannel(), target, code);
+
         return ResponseEntity.ok(success("OTP_SENT"));
     }
 
@@ -207,10 +166,7 @@ public class AuthController {
 
     private void dispatchOtp(OtpChannel channel, String target, String otp) {
         String message = "Mã OTP của bạn là: " + otp + " (hiệu lực trong 5 phút)";
-        if (channel == OtpChannel.EMAIL) {
-            emailService.sendSimpleMessage(target, "Mã OTP xác thực", message);
-        } else {
-            smsService.sendOtp(target, message);
+
         }
     }
 
